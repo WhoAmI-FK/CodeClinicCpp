@@ -4,6 +4,9 @@
 
 int main()
 {
+	WStat::WeatherStatistics ws;
+	ws.loadData();
 
 
+	return 0;
 }

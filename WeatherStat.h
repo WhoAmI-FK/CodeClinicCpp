@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 #include <iostream>
+#include <vector>
+#include <fstream>
+#include <sstream>
 namespace WStat {
 	class Date {
 	private:
@@ -70,30 +73,35 @@ namespace WStat {
 
 	class Parser {
 	public:
-		virtual std::string* parse(std::string str) = 0;
+		virtual void parse(std::string str) = 0;
 	};
 
 	class DateParser : public Parser {
 	public:
-		std::string* parse(std::string str) override {
+		void parse(std::string str) override {
 
 		};
 	};
 
 	class TimeParser : public Parser {
 	public:
-		std::string* parse(std::string str) override {
+		void parse(std::string str) override {
 
 		};
 	};
 
-	class WeatherStatistics {
-	private:
+	struct DataSet {
 		Time _time;
 		Date _date;
 		WeatherData _data;
+	};
+	class WeatherStatistics {
+	private:
+		std::vector<DataSet> stats;
 		Parser* _parser;
 	public:
+		typedef std::ifstream reader;
+		typedef std::stringstream file_parser;
 		double computeCoeff() {
 
 		}
@@ -103,7 +111,41 @@ namespace WStat {
 		}
 		void loadData()
 		{
-
+			std::string line;
+			reader fileStat("stats/Environmental_Data_Deep_Moor_2012.txt");
+			if (fileStat.is_open()) {
+				while (getline(fileStat, line)) {
+					DataSet temp_storage;
+					std::string toOutput;
+					file_parser fileParser(line);
+					fileParser >> toOutput;
+					
+					
+					
+					
+					/*
+					std::cout << toOutput << std::endl;
+					fileParser >> toOutput;
+					std::cout << toOutput << std::endl;
+					fileParser >> toOutput;
+					std::cout << toOutput << std::endl;
+					fileParser >> toOutput;
+					std::cout << toOutput << std::endl;
+					fileParser >> toOutput;
+					std::cout << toOutput << std::endl;
+					fileParser >> toOutput;
+					std::cout << toOutput << std::endl;
+					fileParser >> toOutput;
+					std::cout << toOutput << std::endl;
+					fileParser >> toOutput;
+					std::cout << toOutput << std::endl;
+					fileParser >> toOutput;
+					std::cout << toOutput << std::endl;
+					*/
+				}
+				fileStat.close();
+			}
+			else throw std::runtime_error("Unable to open file");
 		}
 
 	};
