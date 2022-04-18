@@ -1,4 +1,5 @@
 #pragma once
+#define MAX_FILES 5
 #include <string>
 #include <iostream>
 #include <vector>
@@ -120,6 +121,7 @@ namespace WStat {
 	public:
 		typedef std::ifstream reader;
 		typedef std::stringstream file_parser;
+		typedef std::vector<DataSet>::iterator iterator;
 		double computeCoeff() {
 
 		}
@@ -127,45 +129,82 @@ namespace WStat {
 		{
 
 		}
+		void showStat() {
+			this->loadData();
+			std::string str;
+			std::cout << "\n\nEnter START DATE as yyyy_mm_dd: ";
+			std::cin >> str;
+			// load to date	
+			std::cout << "\n\nEnter START TIME as hh:mm:ss (24-hour): ";
+			std::cin >> str;
+			std::cout << "\n\nEnter END DATE as yyyy_mm_dd: ";
+			std::cin >> str;
+			// load to date	
+			std::cout << "\n\nEnter END TIME as hh:mm:ss (24-hour): ";
+			std::cin >> str;
+		}
+
+		void displayData()
+		{
+			for (iterator it = stats.begin(); it != stats.end(); ++it) {
+				std::cout << "--------------\n";
+				std::cout << it->_date.getDateInFormat() << std::endl;
+				std::cout << it->_time.getTimeInFormat() << std::endl;
+				std::cout << it->_data.Air_Temp << " F\n";
+				std::cout << it->_data.Barometric_Press << " inHg\n";
+				std::cout << it->_data.Dew_Point << std::endl; 
+				std::cout << it->_data.Relative_Humidity << " %\n";
+				std::cout << it->_data.Wind_Dir << " deg\n";
+				std::cout << it->_data.Wind_Gust << " mph\n";
+				std::cout << it->_data.Wind_Speed << " mph\n";
+				std::cout << "--------------\n";
+			}
+		}
 		void loadData()
 		{
 			std::string line;
-			reader fileStat("stats/Environmental_Data_Deep_Moor_2012.txt");
-			if (fileStat.is_open()) {
-				getline(fileStat, line); // reading dummyLine
-				while (getline(fileStat, line)) {
-					DataSet* temp_storage = new DataSet();
-					std::string toOutput;
-					file_parser fileParser(line);
-					fileParser >> toOutput;
-					// complete parser
-					_parser = new DateParser();
-					try{
-					std::string* parsedItem = _parser->parse(toOutput);
-					temp_storage->_date.setDate(std::stoi(parsedItem[0]), std::stoi(parsedItem[1]), std::stoi(parsedItem[2]));
-					delete _parser;
-					_parser = new TimeParser();
-					fileParser >> toOutput;
-					parsedItem = _parser->parse(toOutput);
-					temp_storage->_time.setTime(std::stoi(parsedItem[0]),std::stoi(parsedItem[1]),std::stoi(parsedItem[2]));
-					fileParser >> temp_storage->_data.Air_Temp;
-					fileParser >> temp_storage->_data.Barometric_Press;
-					fileParser >> temp_storage->_data.Dew_Point;
-					fileParser >> temp_storage->_data.Relative_Humidity;
-					fileParser >> temp_storage->_data.Wind_Dir;
-					fileParser >> temp_storage->_data.Wind_Gust;
-					fileParser >> temp_storage->_data.Wind_Speed;
-					stats.push_back(*temp_storage);
-					delete temp_storage;
-					}catch(std::exception e){
-						std::cout << e.what() << std::endl;
-					}
-					
-				}
-				fileStat.close();
-			}
-			else throw std::runtime_error("Unable to open file");
-		}
+			std::string file_name = "stats/Environmental_Data_Deep_Moor_2012.txt";
+			for (size_t i = 2; i <= MAX_FILES; ++i) {
+				file_name.replace(38, 1, std::string(std::to_string(i)).c_str());
+				std::cout << "Loading " << file_name << std::endl;
+				reader fileStat(file_name);
+				if (fileStat.is_open()) {
+					getline(fileStat, line); // reading dummyLine
+					while (getline(fileStat, line)) {
 
+						DataSet* temp_storage = new DataSet();
+						std::string toOutput;
+						file_parser fileParser(line);
+						fileParser >> toOutput;
+						// complete parser
+						_parser = new DateParser();
+						try {
+							std::string* parsedItem = _parser->parse(toOutput);
+							temp_storage->_date.setDate(std::stoi(parsedItem[0]), std::stoi(parsedItem[1]), std::stoi(parsedItem[2]));
+							delete _parser;
+							_parser = new TimeParser();
+							fileParser >> toOutput;
+							parsedItem = _parser->parse(toOutput);
+							temp_storage->_time.setTime(std::stoi(parsedItem[0]), std::stoi(parsedItem[1]), std::stoi(parsedItem[2]));
+							fileParser >> temp_storage->_data.Air_Temp;
+							fileParser >> temp_storage->_data.Barometric_Press;
+							fileParser >> temp_storage->_data.Dew_Point;
+							fileParser >> temp_storage->_data.Relative_Humidity;
+							fileParser >> temp_storage->_data.Wind_Dir;
+							fileParser >> temp_storage->_data.Wind_Gust;
+							fileParser >> temp_storage->_data.Wind_Speed;
+							stats.push_back(*temp_storage);
+							delete temp_storage;
+						}
+						catch (std::exception e) {
+							std::cout << e.what() << std::endl;
+						}
+
+					}
+					fileStat.close();
+				}
+				else throw std::runtime_error("Unable to open file");
+			}
+		}
 	};
 };

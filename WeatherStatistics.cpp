@@ -7,6 +7,7 @@ int main()
 	try {
 		WStat::WeatherStatistics ws;
 		ws.loadData();
+		ws.displayData();
 	}
 	catch (std::exception e) {
 		std::cout << e.what();
