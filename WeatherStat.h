@@ -24,6 +24,11 @@ namespace WStat {
 		{
 
 		}
+		void setDate(int yyyy, int mm, int d) {
+			year = yyyy;
+			month = mm;
+			day = d;
+		}
 		explicit Date(const Date& d) 
 		{
 			year = d.year;
@@ -52,6 +57,11 @@ namespace WStat {
 		{
 
 		}
+		void setTime(int hh, int mm, int ss) {
+			hours = hh;
+			mins = mm;
+			secs = ss;
+		}
 		explicit Time(const Time & t)
 		{
 			hours = t.hours;
@@ -73,20 +83,28 @@ namespace WStat {
 
 	class Parser {
 	public:
-		virtual void parse(std::string str) = 0;
+		virtual std::string* parse(std::string str) = 0;
 	};
 
 	class DateParser : public Parser {
 	public:
-		void parse(std::string str) override {
-
+		std::string* parse(std::string str) override {
+			std::string* str_arr = new std::string[3];
+			*(str_arr) = str.substr(0, 4);
+			*(str_arr + 1) = str.substr(5, 2);
+			*(str_arr + 2) = str.substr(8, 2);
+			return str_arr;
 		};
 	};
 
 	class TimeParser : public Parser {
 	public:
-		void parse(std::string str) override {
-
+		std::string* parse(std::string str) override {
+			std::string* str_arr = new std::string[3];
+			*(str_arr) = str.substr(0, 2);
+			*(str_arr + 1) = str.substr(3, 2);
+			*(str_arr + 2) = str.substr(6, 2);
+			return str_arr;
 		};
 	};
 
@@ -114,34 +132,35 @@ namespace WStat {
 			std::string line;
 			reader fileStat("stats/Environmental_Data_Deep_Moor_2012.txt");
 			if (fileStat.is_open()) {
+				getline(fileStat, line); // reading dummyLine
 				while (getline(fileStat, line)) {
-					DataSet temp_storage;
+					DataSet* temp_storage = new DataSet();
 					std::string toOutput;
 					file_parser fileParser(line);
 					fileParser >> toOutput;
+					// complete parser
+					_parser = new DateParser();
+					try{
+					std::string* parsedItem = _parser->parse(toOutput);
+					temp_storage->_date.setDate(std::stoi(parsedItem[0]), std::stoi(parsedItem[1]), std::stoi(parsedItem[2]));
+					delete _parser;
+					_parser = new TimeParser();
+					fileParser >> toOutput;
+					parsedItem = _parser->parse(toOutput);
+					temp_storage->_time.setTime(std::stoi(parsedItem[0]),std::stoi(parsedItem[1]),std::stoi(parsedItem[2]));
+					fileParser >> temp_storage->_data.Air_Temp;
+					fileParser >> temp_storage->_data.Barometric_Press;
+					fileParser >> temp_storage->_data.Dew_Point;
+					fileParser >> temp_storage->_data.Relative_Humidity;
+					fileParser >> temp_storage->_data.Wind_Dir;
+					fileParser >> temp_storage->_data.Wind_Gust;
+					fileParser >> temp_storage->_data.Wind_Speed;
+					stats.push_back(*temp_storage);
+					delete temp_storage;
+					}catch(std::exception e){
+						std::cout << e.what() << std::endl;
+					}
 					
-					
-					
-					
-					/*
-					std::cout << toOutput << std::endl;
-					fileParser >> toOutput;
-					std::cout << toOutput << std::endl;
-					fileParser >> toOutput;
-					std::cout << toOutput << std::endl;
-					fileParser >> toOutput;
-					std::cout << toOutput << std::endl;
-					fileParser >> toOutput;
-					std::cout << toOutput << std::endl;
-					fileParser >> toOutput;
-					std::cout << toOutput << std::endl;
-					fileParser >> toOutput;
-					std::cout << toOutput << std::endl;
-					fileParser >> toOutput;
-					std::cout << toOutput << std::endl;
-					fileParser >> toOutput;
-					std::cout << toOutput << std::endl;
-					*/
 				}
 				fileStat.close();
 			}

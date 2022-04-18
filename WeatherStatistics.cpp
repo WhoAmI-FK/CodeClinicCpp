@@ -4,9 +4,13 @@
 
 int main()
 {
-	WStat::WeatherStatistics ws;
-	ws.loadData();
-
+	try {
+		WStat::WeatherStatistics ws;
+		ws.loadData();
+	}
+	catch (std::exception e) {
+		std::cout << e.what();
+	}
 
 	return 0;
 }
