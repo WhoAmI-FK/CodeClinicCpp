@@ -181,8 +181,6 @@ namespace WStat {
 			if (!stats.empty()) {
 				for (iterator i = stats.begin(); i != stats.end(); ++i) {
 					if (i->_date == _d && i->_time == _t) {
-						std::cout << "FOUND" << std::endl;
-						system("pause");
 						return &(*i);
 					}
 				}
@@ -231,7 +229,7 @@ namespace WStat {
 			data eStat = isValidDateTime(*END_DATE, *END_TIME);
 			if (sStat != nullptr && eStat != nullptr) {
 				// proceed
-				std::cout << "Coefficient: " << computeCoeff(sStat, eStat) << std::endl;
+				std::cout << "Coefficient: " << computeCoeff(sStat, eStat) * 24 * 60 * 60 << " inHg/day" << std::endl;
 			}
 			else std::cout << "Invalid Date Time";
 		}	
