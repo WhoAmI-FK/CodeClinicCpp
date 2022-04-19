@@ -5,6 +5,8 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <cassert>
+#include <ctime>
 namespace WStat {
 	class Date {
 	private:
@@ -19,6 +21,9 @@ namespace WStat {
 				std::to_string(day)
 				);
 		}
+		bool operator==(const Date& rhs) {
+			return (year == rhs.year) && (month == rhs.month) && (day == rhs.day);
+		}
 		explicit Date() = default;
 		explicit Date(int yyyy, int mm, int d) 
 			: year(yyyy),month(mm),day(d)
@@ -30,11 +35,23 @@ namespace WStat {
 			month = mm;
 			day = d;
 		}
+		int getYear() const {
+			return year;
+		}
+		int getMonth() const {
+			return month;
+		}
+		int getDay() const {
+			return day;
+		}
 		explicit Date(const Date& d) 
 		{
 			year = d.year;
 			month = d.month;
 			day = d.day;
+		}
+		int64_t getSecs() {
+
 		}
 		~Date() = default;
 	};
@@ -44,6 +61,15 @@ namespace WStat {
 		int mins;
 		int secs;
 	public:
+		int getHours() const {
+			return hours;
+		}
+		int getMins() const {
+			return mins;
+		}
+		int getSecs() const {
+			return secs;
+		}
 		std::string getTimeInFormat() const {
 			// rework
 			return (
@@ -52,6 +78,9 @@ namespace WStat {
 				std::to_string(secs)
 				);
 		};
+		bool operator==(const Time& rhs) {
+			return (hours == rhs.hours) && (mins == rhs.mins) && (secs == rhs.secs);
+		}
 		explicit Time() = default;
 		explicit Time(int hh, int mm, int ss)
 			: hours(hh), mins(mm), secs(ss)
@@ -122,27 +151,90 @@ namespace WStat {
 		typedef std::ifstream reader;
 		typedef std::stringstream file_parser;
 		typedef std::vector<DataSet>::iterator iterator;
-		double computeCoeff() {
-
+		typedef const Date& const_date;
+		typedef const Time& const_time;
+		typedef DataSet* data;
+		double computeCoeff(data ds, data de) {
+			std::tm t1;
+			std::tm t2;
+			t1.tm_year = ds->_date.getYear() - 1900;
+			t2.tm_year = de->_date.getYear() - 1900;
+			t1.tm_mon = ds->_date.getMonth() - 1;
+			t2.tm_mon = de->_date.getMonth() - 1;
+			t1.tm_mday = ds->_date.getDay();
+			t2.tm_mday = de->_date.getDay();
+			t1.tm_hour = ds->_time.getHours();
+			t2.tm_hour = de->_time.getHours();
+			t1.tm_min = ds->_time.getMins();
+			t2.tm_min = de->_time.getMins();
+			t1.tm_sec = ds->_time.getSecs();
+			t2.tm_sec = de->_time.getSecs();
+			double result = std::difftime(mktime(&t2), mktime(&t1));
+			return static_cast<double>((
+				(de->_data.Barometric_Press - ds->_data.Barometric_Press)
+				/
+				result
+				));
 		}
-		bool isValidDateTime()
+		DataSet* isValidDateTime(const_date _d, const_time _t)
 		{
-
+			if (!stats.empty()) {
+				for (iterator i = stats.begin(); i != stats.end(); ++i) {
+					if (i->_date == _d && i->_time == _t) {
+						std::cout << "FOUND" << std::endl;
+						system("pause");
+						return &(*i);
+					}
+				}
+			}
+			else {
+				assert("Error vector is empty");
+			}
+			return nullptr;
 		}
 		void showStat() {
 			this->loadData();
+			Date* START_DATE, *END_DATE;
+			Time* START_TIME, *END_TIME;
+			std::string* temp_arr;
 			std::string str;
 			std::cout << "\n\nEnter START DATE as yyyy_mm_dd: ";
 			std::cin >> str;
+			_parser = new DateParser();
+			temp_arr = _parser->parse(str);
+			START_DATE = new Date(std::stoi(temp_arr[0]), std::stoi(temp_arr[1]), std::stoi(temp_arr[2]));
+			delete[] temp_arr;
+			delete _parser;
 			// load to date	
 			std::cout << "\n\nEnter START TIME as hh:mm:ss (24-hour): ";
 			std::cin >> str;
+			_parser = new TimeParser();
+			temp_arr = _parser->parse(str);
+			START_TIME = new Time(std::stoi(temp_arr[0]), std::stoi(temp_arr[1]), std::stoi(temp_arr[2]));
+			delete[] temp_arr;
+			delete _parser;
 			std::cout << "\n\nEnter END DATE as yyyy_mm_dd: ";
 			std::cin >> str;
-			// load to date	
+			_parser = new DateParser();
+			temp_arr = _parser->parse(str);
+			END_DATE = new Date(std::stoi(temp_arr[0]), std::stoi(temp_arr[1]), std::stoi(temp_arr[2]));
+			delete[] temp_arr;
+			delete _parser;
 			std::cout << "\n\nEnter END TIME as hh:mm:ss (24-hour): ";
 			std::cin >> str;
-		}
+			_parser = new TimeParser();
+			temp_arr = _parser->parse(str);
+			END_TIME = new Time(std::stoi(temp_arr[0]), std::stoi(temp_arr[1]), std::stoi(temp_arr[2]));
+			delete[] temp_arr;
+			delete _parser;
+			data sStat = isValidDateTime(*START_DATE, *START_TIME);
+			data eStat = isValidDateTime(*END_DATE, *END_TIME);
+			if (sStat != nullptr && eStat != nullptr) {
+				// proceed
+				std::cout << "Coefficient: " << computeCoeff(sStat, eStat) << std::endl;
+			}
+			else std::cout << "Invalid Date Time";
+		}	
 
 		void displayData()
 		{
