@@ -2,6 +2,8 @@
 #include <ctime>
 #include "WeatherStat.h"
 
+
+/*
 int main()
 {
 	
@@ -16,3 +18,4 @@ int main()
 
 	return 0;
 }
+*/
